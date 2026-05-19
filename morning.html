@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0e0d0b;
+  --surface: #181714;
+  --surface2: #1e1c18;
+  --border: #2a2722;
+  --text: #e8e0d0;
+  --muted: #6b6459;
+  --accent: #c8914a;
+  --accent-dim: #3d2a14;
+  --success: #5a9e6f;
+  --success-dim: #162419;
+  --danger: #9e5a5a;
+  --night: #7b8ec8;
+  --night-dim: #1a1f38;
+  --radius: 14px;
+}
+
+html { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 16px; }
+
+body {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 0 4rem;
+}
+
+/* ── TAB BAR ── */
+.tab-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+  padding: 0;
+}
+
+.tab-bar-inner {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+}
+
+.tab {
+  flex: 1;
+  padding: 16px 0;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
+.tab::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 15%;
+  width: 70%;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 99px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.tab.night-tab::after { background: var(--night); }
+
+.tab.active { color: var(--text); }
+.tab.active::after { opacity: 1; }
+.tab .tab-icon { font-size: 18px; }
+
+/* ── PANELS ── */
+.container { width: 100%; max-width: 480px; padding: 1.75rem 1.25rem 0; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── TOP ── */
+.top { margin-bottom: 2rem; }
+
+.greeting {
+  font-family: 'DM Serif Display', serif;
+  font-size: 30px;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.date { font-size: 13px; color: var(--muted); letter-spacing: 0.04em; }
+
+/* ── STATS ── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+}
+
+.stat-val { font-size: 22px; font-weight: 500; color: var(--text); line-height: 1; margin-bottom: 5px; }
+.stat-label { font-size: 10px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* ── PROGRESS ── */
+.progress-wrap { margin-bottom: 1.5rem; }
+.progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.bar-bg { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.4s cubic-bezier(.4,0,.2,1); }
+.bar-fill.night { background: var(--night); }
+
+/* ── SECTION ── */
+.section-label {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* ── HABITS ── */
+.habits { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
+
+.habit {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 15px 16px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.2s, background 0.2s;
+  user-select: none;
+}
+
+.habit:active { transform: scale(0.98); }
+.habit.done { border-color: var(--success); background: var(--success-dim); }
+.habit.done.night-habit { border-color: var(--night); background: var(--night-dim); }
+
+.check {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.2s;
+}
+
+.habit.done .check { background: var(--success); border-color: var(--success); }
+.habit.done.night-habit .check { background: var(--night); border-color: var(--night); }
+
+.check svg {
+  width: 14px; height: 14px;
+  stroke: #0e0d0b; stroke-width: 2.5;
+  stroke-linecap: round; stroke-linejoin: round;
+  fill: none; opacity: 0; transition: opacity 0.15s;
+}
+
+.habit.done .check svg { opacity: 1; }
+
+.habit-info { flex: 1; min-width: 0; }
+.habit-name { font-size: 15px; font-weight: 400; color: var(--text); margin-bottom: 2px; }
+.habit.done .habit-name { color: var(--success); }
+.habit.done.night-habit .habit-name { color: var(--night); }
+.habit-streak { font-size: 11px; color: var(--muted); }
+
+/* ── DIVIDER ── */
+.divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+
+/* ── WORKOUT LOGGER ── */
+.workout-section { margin-bottom: 1.5rem; }
+
+.workout-items { display: flex; flex-direction: column; gap: 10px; }
+
+.workout-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.workout-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.workout-name { font-size: 14px; font-weight: 500; color: var(--text); }
+.workout-total { font-size: 13px; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+.workout-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.w-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  padding: 6px 11px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.w-btn:hover, .w-btn:active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+.w-log {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.w-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.w-entry-val { color: var(--text); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.w-del {
+  background: transparent;
+  border: none;
+  color: var(--border);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  transition: color 0.15s;
+}
+
+.w-del:hover { color: var(--danger); }
+
+.custom-w-row { display: flex; gap: 8px; margin-top: 10px; }
+
+.custom-w-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.custom-w-input:focus { border-color: var(--accent); }
+.custom-w-input::placeholder { color: var(--muted); }
+
+/* ── WORK BLOCK ── */
+.work-block { margin-bottom: 1.5rem; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.work-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.work-card-title {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.work-textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: none;
+  min-height: 90px;
+}
+
+.work-textarea::placeholder { color: var(--muted); }
+
+/* ── TASKS ── */
+.weekly-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.week-label { font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.week-actions { display: flex; gap: 8px; }
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-ghost:hover { border-color: var(--muted); color: var(--text); }
+
+.tasks { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 13px 16px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.task-row.done { border-color: var(--success); background: var(--success-dim); }
+
+.task-check {
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; cursor: pointer;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.task-row.done .task-check { background: var(--success); border-color: var(--success); }
+
+.task-check svg {
+  width: 12px; height: 12px;
+  stroke: #0e0d0b; stroke-width: 2.5;
+  stroke-linecap: round; stroke-linejoin: round;
+  fill: none; opacity: 0; transition: opacity 0.15s;
+}
+
+.task-row.done .task-check svg { opacity: 1; }
+
+.task-text {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+  cursor: text;
+  min-width: 0;
+}
+
+.task-row.done .task-text { color: var(--success); text-decoration: line-through; }
+.task-text::placeholder { color: var(--muted); }
+
+.task-del {
+  background: transparent;
+  border: none;
+  color: var(--border);
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 18px;
+  line-height: 1;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+
+.task-del:hover { color: var(--danger); }
+
+.add-task-row { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+
+.add-task-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.add-task-input:focus { border-color: var(--accent); }
+.add-task-input::placeholder { color: var(--muted); }
+
+.btn-add {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 20px;
+  padding: 0 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  line-height: 1;
+}
+
+.btn-add:hover { background: var(--accent); color: #0e0d0b; }
+
+/* ── NIGHT TASKS ── */
+.night-add-row .add-task-input:focus { border-color: var(--night); }
+
+.night-add-row .btn-add {
+  background: var(--night-dim);
+  border-color: var(--night);
+  color: var(--night);
+}
+
+.night-add-row .btn-add:hover { background: var(--night); color: #0e0d0b; }
+
+/* ── TOMORROW PLAN ── */
+.tomorrow-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 1.5rem;
+}
+
+.tomorrow-title {
+  font-size: 11px;
+  color: var(--night);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tomorrow-textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  resize: none;
+  min-height: 120px;
+}
+
+.tomorrow-textarea::placeholder { color: var(--muted); }
+
+/* ── BATHROOM SHELF ── */
+.shelf-section { margin-bottom: 1.5rem; }
+
+.shelf-items { display: flex; flex-direction: column; gap: 8px; }
+
+.shelf-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.2s, background 0.2s;
+  user-select: none;
+}
+
+.shelf-item.done {
+  border-color: var(--night);
+  background: var(--night-dim);
+}
+
+.shelf-check {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.2s;
+}
+
+.shelf-item.done .shelf-check { background: var(--night); border-color: var(--night); }
+
+.shelf-check svg {
+  width: 12px; height: 12px;
+  stroke: #0e0d0b; stroke-width: 2.5;
+  stroke-linecap: round; stroke-linejoin: round;
+  fill: none; opacity: 0; transition: opacity 0.15s;
+}
+
+.shelf-item.done .shelf-check svg { opacity: 1; }
+
+.shelf-name { flex: 1; font-size: 14px; color: var(--text); }
+.shelf-item.done .shelf-name { color: var(--night); }
+.shelf-tip { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+/* ── CAL GRID ── */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-bottom: 2rem;
+}
+
+.cal-cell {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-size: 9px; color: var(--muted); gap: 3px;
+}
+
+.cal-cell.today { border-color: var(--accent); color: var(--accent); }
+
+.dots { display: flex; gap: 1.5px; }
+.dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+.dot.on { background: var(--success); }
+.dot.night-on { background: var(--night); }
+
+/* ── RESET ── */
+.reset-btn {
+  display: block; width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+  margin-bottom: 1rem;
+}
+
+.reset-btn:hover { border-color: var(--muted); color: var(--text); }
+.empty-tasks { font-size: 13px; color: var(--muted); text-align: center; padding: 1rem 0; }
+
+/* ── NIGHT STATS ── */
+.night-stat .stat-val { color: var(--night); }
+
+/* ── LIGHT MODE ── */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f5f2ed;
+    --surface: #ffffff;
+    --surface2: #f0ece5;
+    --border: #e0d9cf;
+    --text: #1a1714;
+    --muted: #9a8f82;
+    --accent: #b07830;
+    --accent-dim: #fdf3e7;
+    --success: #2d7a4a;
+    --success-dim: #edf7f1;
+    --danger: #c0392b;
+    --night: #4a5fa8;
+    --night-dim: #edf0fb;
+  }
+  .check svg, .task-check svg, .shelf-check svg { stroke: #fff; }
+}
+</style>
+</head>
+<body>
+
+<nav class="tab-bar">
+  <div class="tab-bar-inner">
+    <button class="tab active" id="tab-morning" onclick="switchTab('morning')">
+      <span class="tab-icon">☀️</span>
+      <span>Morning</span>
+    </button>
+    <button class="tab" id="tab-workout" onclick="switchTab('workout')">
+      <span class="tab-icon">🏃</span>
+      <span>Workout</span>
+    </button>
+    <button class="tab" id="tab-work" onclick="switchTab('work')">
+      <span class="tab-icon">💼</span>
+      <span>Work</span>
+    </button>
+    <button class="tab night-tab" id="tab-night" onclick="switchTab('night')">
+      <span class="tab-icon">🌙</span>
+      <span>Night</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══════════════════ MORNING ══════════════════ -->
+<div class="container">
+<div class="panel active" id="panel-morning">
+
+  <div class="top">
+    <div class="greeting" id="greeting">Good morning.</div>
+    <div class="date" id="date-label"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="s-done">0/5</div><div class="stat-label">Today</div></div>
+    <div class="stat"><div class="stat-val" id="s-streak">0</div><div class="stat-label">Streak</div></div>
+    <div class="stat"><div class="stat-val" id="s-days">0</div><div class="stat-label">Days</div></div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-meta"><span>Morning progress</span><span id="m-pct">0%</span></div>
+    <div class="bar-bg"><div class="bar-fill" id="m-bar" style="width:0%"></div></div>
+  </div>
+
+  <div class="section-label">Morning checklist</div>
+  <div class="habits" id="habits"></div>
+
+  <div class="section-label" style="margin-bottom:10px;">Skincare — bathroom shelf</div>
+  <div class="shelf-items" id="morning-shelf" style="margin-bottom:1.5rem;"></div>
+
+  <div class="divider"></div>
+
+  <div class="section-label">Last 28 days</div>
+  <div class="cal-grid" id="cal"></div>
+
+  <button class="reset-btn" onclick="resetToday()">Reset today's morning checklist</button>
+
+</div>
+
+<!-- ══════════════════ WORKOUT ══════════════════ -->
+<div class="panel" id="panel-workout">
+
+  <div class="top">
+    <div class="greeting" style="font-size:24px">Workout log.</div>
+    <div class="date" id="workout-date"></div>
+  </div>
+
+  <div class="section-label">Today's activity</div>
+  <div class="workout-section">
+    <div class="workout-items" id="workout-items"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section-label">This week's totals</div>
+  <div class="stats" id="workout-totals" style="margin-bottom:2rem;"></div>
+
+</div>
+
+<!-- ══════════════════ WORK ══════════════════ -->
+<div class="panel" id="panel-work">
+
+  <div class="top">
+    <div class="greeting" style="font-size:24px">Work block.</div>
+    <div class="date" id="work-date"></div>
+  </div>
+
+  <div class="section-label">Focus log</div>
+  <div class="two-col" style="margin-bottom:1.5rem;">
+    <div class="work-card">
+      <div class="work-card-title">✅ Done today</div>
+      <textarea class="work-textarea" id="work-done" placeholder="What I shipped…" rows="5"></textarea>
+    </div>
+    <div class="work-card">
+      <div class="work-card-title">→ Next up</div>
+      <textarea class="work-textarea" id="work-next" placeholder="Next actions…" rows="5"></textarea>
+    </div>
+  </div>
+
+  <div class="divider" style="margin-top:0;"></div>
+
+  <div class="weekly-header">
+    <div class="week-label">Tasks — this week</div>
+    <div class="week-actions">
+      <button class="btn-ghost" onclick="clearDoneTasks()">Clear done</button>
+      <button class="btn-ghost" onclick="clearAllTasks()">Reset</button>
+    </div>
+  </div>
+
+  <div class="tasks" id="tasks"></div>
+
+  <div class="add-task-row">
+    <input class="add-task-input" id="new-task-input" type="text" placeholder="Add a task…" maxlength="120" />
+    <button class="btn-add" onclick="addTask()">+</button>
+  </div>
+
+</div>
+
+<!-- ══════════════════ NIGHT ══════════════════ -->
+<div class="panel" id="panel-night">
+
+  <div class="top">
+    <div class="greeting" style="font-size:24px; font-family:'DM Serif Display',serif;">Good night.</div>
+    <div class="date" id="night-date"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat night-stat"><div class="stat-val" id="n-done">0/9</div><div class="stat-label">Packed</div></div>
+    <div class="stat night-stat"><div class="stat-val" id="n-streak">0</div><div class="stat-label">Nights</div></div>
+    <div class="stat night-stat"><div class="stat-val" id="s-days-n">0</div><div class="stat-label">Days</div></div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-meta"><span>Night prep progress</span><span id="n-pct">0%</span></div>
+    <div class="bar-bg"><div class="bar-fill night" id="n-bar" style="width:0%"></div></div>
+  </div>
+
+  <div class="section-label">Prep for tomorrow</div>
+  <div class="shelf-items" id="night-checklist" style="margin-bottom:1.5rem;"></div>
+
+  <div class="divider"></div>
+
+  <div class="section-label">Plan tomorrow</div>
+  <div class="tomorrow-card">
+    <div class="tomorrow-title">📋 Tomorrow's priorities</div>
+    <textarea class="tomorrow-textarea" id="tomorrow-plan" placeholder="What do I want to accomplish tomorrow?&#10;&#10;— Morning goal&#10;— Work focus&#10;— Evening"></textarea>
+  </div>
+
+  <div class="section-label" style="margin-bottom:10px;">Tomorrow's to-do list</div>
+  <div class="tasks" id="night-tasks"></div>
+  <div class="add-task-row night-add-row">
+    <input class="add-task-input" id="night-task-input" type="text" placeholder="Add a task for tomorrow…" maxlength="120" />
+    <button class="btn-add" onclick="addNightTask()">+</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <button class="reset-btn" onclick="resetNight()">Reset tonight's checklist</button>
+
+</div>
+</div><!-- /container -->
+
+<script>
+// ═══════════ DATA ═══════════
+const HABITS = [
+  { id: 'coffee',     name: 'Coffee' },
+  { id: 'workout',   name: 'Walk / run + calisthenics' },
+  { id: 'shower',    name: 'Shower + get dressed' },
+  { id: 'skincare',  name: 'Skincare' },
+  { id: 'breakfast', name: 'Breakfast' },
+  { id: 'workblock', name: 'Work block' },
+];
+
+const NIGHT_CHECKS = [
+  { id: 'clothes-work',   name: 'Work clothes ready',    tip: 'Laid out + ironed if needed' },
+  { id: 'clothes-gym',    name: 'Gym / workout clothes',  tip: 'Folded by the door' },
+  { id: 'shoes',          name: 'Running shoes placed',   tip: 'At the door' },
+  { id: 'food',           name: 'Food packed',            tip: 'Lunch + snacks ready' },
+  { id: 'bag',            name: 'Bag packed',             tip: 'Essentials checked' },
+  { id: 'chargers',       name: 'Chargers in bag',        tip: 'Laptop + phone charger' },
+  { id: 'headphones',     name: 'Headphones charging',    tip: 'Plugged in overnight' },
+  { id: 'phone',          name: 'Phone charging',         tip: 'On the nightstand' },
+  { id: 'alarm',          name: 'Alarm set',              tip: 'Double-checked' },
+];
+
+const SHELF_CHECKS = [
+  { id: 'shelf-cleanse',  name: 'Cleanse',   tip: 'Face wash — 60 seconds' },
+  { id: 'shelf-serum',    name: 'Serum / toner', tip: 'Pat, don\'t rub' },
+  { id: 'shelf-moistur',  name: 'Moisturizer',   tip: 'Seal everything in' },
+];
+
+const WORKOUT_ITEMS = [
+  { id: 'walk',   name: 'Walk',   unit: 'min',  increments: [5, 10, 15, 30] },
+  { id: 'run',    name: 'Run',    unit: 'min',  increments: [5, 10, 15, 20] },
+  { id: 'pushups',name: 'Push-ups', unit: 'reps', increments: [5, 10, 15, 25] },
+  { id: 'abs',    name: 'Abs',    unit: 'reps', increments: [5, 10, 15, 25] },
+];
+
+const N_HABITS = HABITS.length; // now 6
+const N_NIGHT  = NIGHT_CHECKS.length;
+const N_SHELF  = SHELF_CHECKS.length;
+
+// ═══════════ STORAGE HELPERS ═══════════
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function dateStr(d)  { return d.toISOString().slice(0, 10); }
+function ls(k, def)  { try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(def)); } catch { return def; } }
+function ss(k, v)    { localStorage.setItem(k, JSON.stringify(v)); }
+
+function loadAll()       { return ls('morning_all', {}); }
+function saveAll(a)      { ss('morning_all', a); }
+function loadNightAll()  { return ls('night_all', {}); }
+function saveNightAll(a) { ss('night_all', a); }
+function loadTasks()     { return ls('morning_tasks', []); }
+function saveTasks(t)    { ss('morning_tasks', t); }
+function loadNightTasks(){ return ls('night_tasks_v2', []); }
+function saveNightTasks(t){ ss('night_tasks_v2', t); }
+function loadWorkout()   { return ls('workout_log_v2', {}); }
+function saveWorkout(w)  { ss('workout_log_v2', w); }
+function loadWorkDone()  { return ls('work_done', {}); }
+function saveWorkDone(d) { ss('work_done', d); }
+function loadWorkNext()  { return ls('work_next', {}); }
+function saveWorkNext(n) { ss('work_next', n); }
+function loadTomorrowPlan(){ return ls('tomorrow_plan', {}); }
+function saveTomorrowPlan(p){ ss('tomorrow_plan', p); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function getTodaySet(key)    { const a = ls(key, {}); return new Set(a[todayStr()] || []); }
+function saveTodaySet(key,s) { const a = ls(key, {}); a[todayStr()] = Array.from(s); ss(key, a); }
+
+// ═══════════ GREETING ═══════════
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? 'Good morning.' : h < 17 ? 'Good afternoon.' : 'Good evening.';
+}
+
+function fmtDate() {
+  return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
+// ═══════════ STREAK ═══════════
+function habitStreak(hid) {
+  const all = loadAll(); let s = 0; const d = new Date();
+  while(true){ const k=dateStr(d); if(all[k]&&all[k].includes(hid)){s++;d.setDate(d.getDate()-1);}else break; }
+  return s;
+}
+function fullStreak() {
+  const all = loadAll(); let s = 0; const d = new Date();
+  while(true){ const k=dateStr(d); if(all[k]&&all[k].length===N_HABITS){s++;d.setDate(d.getDate()-1);}else break; }
+  return s;
+}
+function daysLogged() { return Object.keys(loadAll()).length; }
+function nightStreak() {
+  const all = loadNightAll(); let s = 0; const d = new Date();
+  while(true){ const k=dateStr(d); if(all[k]&&all[k].length>=6){s++;d.setDate(d.getDate()-1);}else break; }
+  return s;
+}
+
+// ═══════════ TAB SWITCHING ═══════════
+function switchTab(name) {
+  ['morning','workout','work','night'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+    document.getElementById('panel-' + t).classList.toggle('active', t === name);
+  });
+  if (name === 'workout') renderWorkout();
+  if (name === 'work') renderWork();
+  if (name === 'night') renderNight();
+}
+
+// ═══════════ MORNING ═══════════
+function renderHabits() {
+  document.getElementById('greeting').textContent = greeting();
+  document.getElementById('date-label').textContent = fmtDate();
+
+  const checked = getTodaySet('morning_all');
+  const done = checked.size;
+  const pct = Math.round((done / N_HABITS) * 100);
+
+  document.getElementById('s-done').textContent = done + '/' + N_HABITS;
+  document.getElementById('s-streak').textContent = fullStreak();
+  document.getElementById('s-days').textContent = daysLogged();
+  document.getElementById('m-pct').textContent = pct + '%';
+  document.getElementById('m-bar').style.width = pct + '%';
+
+  const list = document.getElementById('habits');
+  list.innerHTML = '';
+  HABITS.forEach(h => {
+    const on = checked.has(h.id);
+    const s = habitStreak(h.id);
+    const row = document.createElement('div');
+    row.className = 'habit' + (on ? ' done' : '');
+    row.innerHTML = `
+      <div class="check"><svg viewBox="0 0 14 14"><polyline points="2,7 6,11 12,3"/></svg></div>
+      <div class="habit-info">
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-streak">${s > 0 ? s + ' day streak' : 'not started yet'}</div>
+      </div>`;
+    row.onclick = () => {
+      const c = getTodaySet('morning_all');
+      c.has(h.id) ? c.delete(h.id) : c.add(h.id);
+      saveTodaySet('morning_all', c);
+      renderHabits();
+      renderCal();
+    };
+    list.appendChild(row);
+  });
+
+  // skincare shelf
+  const shelf = document.getElementById('morning-shelf');
+  const shelfSet = getTodaySet('shelf_all');
+  shelf.innerHTML = '';
+  SHELF_CHECKS.forEach(item => {
+    const on = shelfSet.has(item.id);
+    const div = document.createElement('div');
+    div.className = 'shelf-item' + (on ? ' done' : '');
+    div.innerHTML = `
+      <div class="shelf-check"><svg viewBox="0 0 12 12"><polyline points="1.5,6 5,9.5 10.5,2.5"/></svg></div>
+      <div class="habit-info">
+        <div class="shelf-name">${item.name}</div>
+        <div class="shelf-tip">${item.tip}</div>
+      </div>`;
+    div.onclick = () => {
+      const s = getTodaySet('shelf_all');
+      s.has(item.id) ? s.delete(item.id) : s.add(item.id);
+      saveTodaySet('shelf_all', s);
+      renderHabits();
+    };
+    shelf.appendChild(div);
+  });
+}
+
+function renderCal() {
+  const cal = document.getElementById('cal');
+  cal.innerHTML = '';
+  const all = loadAll();
+  const today = new Date();
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const k = dateStr(d);
+    const data = all[k] || [];
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell' + (i === 0 ? ' today' : '');
+    const dots = HABITS.map(h => `<div class="dot${data.includes(h.id) ? ' on' : ''}"></div>`).join('');
+    cell.innerHTML = `<span>${d.getDate()}</span><div class="dots">${dots}</div>`;
+    cal.appendChild(cell);
+  }
+}
+
+function resetToday() {
+  if (!confirm("Reset today's morning checklist?")) return;
+  const a = loadAll(); delete a[todayStr()]; saveAll(a);
+  renderHabits(); renderCal();
+}
+
+// ═══════════ WORKOUT ═══════════
+function renderWorkout() {
+  document.getElementById('workout-date').textContent = fmtDate();
+
+  const log = loadWorkout();
+  const today = log[todayStr()] || {};
+
+  const container = document.getElementById('workout-items');
+  container.innerHTML = '';
+
+  WORKOUT_ITEMS.forEach(item => {
+    const entries = today[item.id] || [];
+    const total = entries.reduce((a, b) => a + b.val, 0);
+
+    const div = document.createElement('div');
+    div.className = 'workout-item';
+
+    const unitLabel = item.unit === 'min' ? 'min' : 'reps';
+
+    div.innerHTML = `
+      <div class="workout-item-top">
+        <div class="workout-name">${item.name}</div>
+        <div class="workout-total" id="wt-${item.id}">${total > 0 ? total + ' ' + unitLabel : '—'}</div>
+      </div>
+      <div class="workout-btns">
+        ${item.increments.map(n => `<button class="w-btn" onclick="logWorkout('${item.id}',${n})">+${n} ${unitLabel}</button>`).join('')}
+        <button class="w-btn" onclick="openCustomWorkout('${item.id}','${item.unit}')">+ custom</button>
+      </div>
+      <div class="custom-w-row" id="custom-${item.id}" style="display:none;">
+        <input class="custom-w-input" id="cinput-${item.id}" type="number" min="1" placeholder="Enter ${unitLabel}…" />
+        <button class="w-btn" onclick="submitCustomWorkout('${item.id}')">Add</button>
+      </div>
+      <div class="w-log" id="wlog-${item.id}"></div>
+    `;
+
+    container.appendChild(div);
+
+    // render log entries
+    renderWorkoutLog(item.id, entries, unitLabel);
+  });
+
+  renderWorkoutTotals();
+}
+
+function renderWorkoutLog(id, entries, unitLabel) {
+  const log = document.getElementById('wlog-' + id);
+  if (!log) return;
+  log.innerHTML = '';
+  entries.forEach((e, i) => {
+    const row = document.createElement('div');
+    row.className = 'w-entry';
+    row.innerHTML = `
+      <span>${e.time}</span>
+      <span class="w-entry-val">+${e.val} ${unitLabel}</span>
+      <button class="w-del" onclick="deleteWorkoutEntry('${id}',${i})">×</button>
+    `;
+    log.appendChild(row);
+  });
+}
+
+function logWorkout(id, val) {
+  const log = loadWorkout();
+  const today = log[todayStr()] || {};
+  if (!today[id]) today[id] = [];
+  const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  today[id].push({ val, time });
+  log[todayStr()] = today;
+  saveWorkout(log);
+  renderWorkout();
+}
+
+function openCustomWorkout(id) {
+  const row = document.getElementById('custom-' + id);
+  row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+  if (row.style.display === 'flex') document.getElementById('cinput-' + id).focus();
+}
+
+function submitCustomWorkout(id) {
+  const input = document.getElementById('cinput-' + id);
+  const val = parseInt(input.value);
+  if (!val || val < 1) return;
+  logWorkout(id, val);
+  input.value = '';
+  document.getElementById('custom-' + id).style.display = 'none';
+}
+
+function deleteWorkoutEntry(id, idx) {
+  const log = loadWorkout();
+  const today = log[todayStr()] || {};
+  if (today[id]) today[id].splice(idx, 1);
+  log[todayStr()] = today;
+  saveWorkout(log);
+  renderWorkout();
+}
+
+function renderWorkoutTotals() {
+  const log = loadWorkout();
+  const totals = {};
+  WORKOUT_ITEMS.forEach(item => { totals[item.id] = 0; });
+  const today = new Date();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const k = dateStr(d);
+    const day = log[k] || {};
+    WORKOUT_ITEMS.forEach(item => {
+      const entries = day[item.id] || [];
+      totals[item.id] += entries.reduce((a, b) => a + b.val, 0);
+    });
+  }
+
+  const container = document.getElementById('workout-totals');
+  container.innerHTML = '';
+  WORKOUT_ITEMS.forEach(item => {
+    const stat = document.createElement('div');
+    stat.className = 'stat';
+    stat.innerHTML = `<div class="stat-val" style="font-size:18px;">${totals[item.id]}</div><div class="stat-label">${item.name}<br>${item.unit}/wk</div>`;
+    container.appendChild(stat);
+  });
+}
+
+// ═══════════ WORK ═══════════
+function renderWork() {
+  document.getElementById('work-date').textContent = fmtDate();
+
+  const donePad = loadWorkDone();
+  const nextPad = loadWorkNext();
+  const t = todayStr();
+  document.getElementById('work-done').value = donePad[t] || '';
+  document.getElementById('work-next').value = nextPad[t] || '';
+
+  document.getElementById('work-done').oninput = () => {
+    const d = loadWorkDone(); d[t] = document.getElementById('work-done').value; saveWorkDone(d);
+  };
+  document.getElementById('work-next').oninput = () => {
+    const n = loadWorkNext(); n[t] = document.getElementById('work-next').value; saveWorkNext(n);
+  };
+
+  renderTasks();
+}
+
+function renderTasks() {
+  const tasks = loadTasks();
+  const list = document.getElementById('tasks');
+  list.innerHTML = '';
+  if (tasks.length === 0) {
+    list.innerHTML = '<div class="empty-tasks">No tasks yet</div>';
+    return;
+  }
+  tasks.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'task-row' + (t.done ? ' done' : '');
+
+    const check = document.createElement('div');
+    check.className = 'task-check';
+    check.innerHTML = `<svg viewBox="0 0 12 12"><polyline points="1.5,6 5,9.5 10.5,2.5"/></svg>`;
+    check.onclick = () => toggleTask(t.id);
+
+    const input = document.createElement('input');
+    input.type = 'text'; input.className = 'task-text';
+    input.value = t.text; input.disabled = t.done;
+    input.onblur = () => updateTaskText(t.id, input.value.trim());
+    input.onkeydown = e => { if (e.key === 'Enter') input.blur(); };
+
+    const del = document.createElement('button');
+    del.className = 'task-del'; del.innerHTML = '×';
+    del.onclick = () => deleteTask(t.id);
+
+    row.appendChild(check); row.appendChild(input); row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
+function addTask() {
+  const inp = document.getElementById('new-task-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  const tasks = loadTasks();
+  tasks.push({ id: uid(), text, done: false });
+  saveTasks(tasks); inp.value = ''; renderTasks();
+}
+function toggleTask(id) {
+  const tasks = loadTasks(); const t = tasks.find(t => t.id === id);
+  if (t) t.done = !t.done; saveTasks(tasks); renderTasks();
+}
+function deleteTask(id) { saveTasks(loadTasks().filter(t => t.id !== id)); renderTasks(); }
+function updateTaskText(id, text) {
+  const tasks = loadTasks(); const t = tasks.find(t => t.id === id);
+  if (t && text) t.text = text; saveTasks(tasks);
+}
+function clearDoneTasks() { saveTasks(loadTasks().filter(t => !t.done)); renderTasks(); }
+function clearAllTasks() { if (confirm('Clear all tasks?')) { saveTasks([]); renderTasks(); } }
+
+// ═══════════ NIGHT ═══════════
+function renderNight() {
+  document.getElementById('night-date').textContent = fmtDate();
+
+  const nightSet  = getTodaySet('night_all');
+  const pct = Math.round((nightSet.size / N_NIGHT) * 100);
+
+  document.getElementById('n-done').textContent   = nightSet.size + '/' + N_NIGHT;
+  document.getElementById('n-streak').textContent = nightStreak();
+  document.getElementById('s-days-n').textContent = daysLogged();
+  document.getElementById('n-pct').textContent    = pct + '%';
+  document.getElementById('n-bar').style.width    = pct + '%';
+
+  // night checklist
+  const nl = document.getElementById('night-checklist');
+  nl.innerHTML = '';
+  NIGHT_CHECKS.forEach(item => {
+    const on = nightSet.has(item.id);
+    const div = document.createElement('div');
+    div.className = 'shelf-item' + (on ? ' done' : '');
+    div.innerHTML = `
+      <div class="shelf-check"><svg viewBox="0 0 12 12"><polyline points="1.5,6 5,9.5 10.5,2.5"/></svg></div>
+      <div class="habit-info">
+        <div class="shelf-name">${item.name}</div>
+        <div class="shelf-tip">${item.tip}</div>
+      </div>`;
+    div.onclick = () => {
+      const s = getTodaySet('night_all');
+      s.has(item.id) ? s.delete(item.id) : s.add(item.id);
+      saveTodaySet('night_all', s);
+      renderNight();
+    };
+    nl.appendChild(div);
+  });
+
+  // tomorrow plan
+  const plans = loadTomorrowPlan();
+  const t = todayStr();
+  document.getElementById('tomorrow-plan').value = plans[t] || '';
+  document.getElementById('tomorrow-plan').oninput = () => {
+    const p = loadTomorrowPlan();
+    p[t] = document.getElementById('tomorrow-plan').value;
+    saveTomorrowPlan(p);
+  };
+
+  renderNightTasks();
+}
+
+function renderNightTasks() {
+  const tasks = loadNightTasks();
+  const list = document.getElementById('night-tasks');
+  list.innerHTML = '';
+  if (tasks.length === 0) {
+    list.innerHTML = '<div class="empty-tasks">Nothing planned yet — add tasks for tomorrow</div>';
+    return;
+  }
+  tasks.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'task-row' + (t.done ? ' done' : '');
+
+    const check = document.createElement('div');
+    check.className = 'task-check';
+    check.innerHTML = `<svg viewBox="0 0 12 12"><polyline points="1.5,6 5,9.5 10.5,2.5"/></svg>`;
+    check.onclick = () => toggleNightTask(t.id);
+
+    const input = document.createElement('input');
+    input.type = 'text'; input.className = 'task-text';
+    input.value = t.text; input.disabled = t.done;
+    input.onblur = () => { const tasks = loadNightTasks(); const f = tasks.find(x=>x.id===t.id); if(f&&input.value.trim())f.text=input.value.trim(); saveNightTasks(tasks); };
+    input.onkeydown = e => { if (e.key === 'Enter') input.blur(); };
+
+    const del = document.createElement('button');
+    del.className = 'task-del'; del.innerHTML = '×';
+    del.onclick = () => { saveNightTasks(loadNightTasks().filter(x=>x.id!==t.id)); renderNightTasks(); };
+
+    row.appendChild(check); row.appendChild(input); row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
+function addNightTask() {
+  const inp = document.getElementById('night-task-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  const tasks = loadNightTasks();
+  tasks.push({ id: uid(), text, done: false });
+  saveNightTasks(tasks); inp.value = ''; renderNightTasks();
+}
+
+function toggleNightTask(id) {
+  const tasks = loadNightTasks(); const t = tasks.find(t=>t.id===id);
+  if (t) t.done = !t.done; saveNightTasks(tasks); renderNightTasks();
+}
+
+function resetNight() {
+  if (!confirm("Reset tonight's checklist?")) return;
+  const na = loadNightAll(); delete na[todayStr()]; ss('night_all', na);
+  const sa = ls('shelf_all', {}); delete sa[todayStr()]; ss('shelf_all', sa);
+  renderNight();
+}
+
+// ═══════════ INIT ═══════════
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('new-task-input').addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+  document.getElementById('night-task-input').addEventListener('keydown', e => { if (e.key === 'Enter') addNightTask(); });
+});
+
+renderHabits();
+renderCal();
+</script>
+</body>
+</html>
